@@ -1,6 +1,6 @@
 #include <kv.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define TOMBSTONE 0x1
 
@@ -25,7 +25,7 @@ kv_t *kv_init(size_t capacity) {
   return table;
 }
 
-size_t hash(const char *val, int capacity) {
+size_t hash(char *val, int capacity) {
   size_t hash = 0x13371337deadbeef;
 
   while (*val) {
@@ -46,25 +46,26 @@ size_t hash(const char *val, int capacity) {
 //  - value: a pointer to the value itself
 // returns: the index of the key, otherwise on
 // error, returns -1, on not found return -2
-int kv_put(kv_t *db, const char *key, const char *value) {
+int kv_put(kv_t *db, char *key, char *value) {
   if (!db || !key || !value)
     return -1;
 
   size_t idx = hash(key, db->capacity);
 
   for (int i = 0; i < db->capacity - 1; i++) {
-    size_t read_idx = (idx + i) % db->capacity;
+    size_t real_idx = (idx + i) % db->capacity;
 
-    kv_entry_t *entry = &db->entries[read_idx];
+    kv_entry_t *entry = &db->entries[real_idx];
 
-    if (entry->key && entry->key != (void*)TOMBSTONE && !strcmp(entry->key, key)) {
+    if (entry->key && entry->key != (void *)TOMBSTONE &&
+        !strcmp(entry->key, key)) {
       char *newval = strdup(value);
       if (!newval)
         return -1;
       entry->value = newval;
-      return 0;
+      return real_idx;
     }
-    if (!entry->key || entry->key == (void*)TOMBSTONE) {
+    if (!entry->key || entry->key == (void *)TOMBSTONE) {
       char *newval = strdup(value);
       char *newkey = strdup(key);
       if (!newval || !newkey) {
@@ -75,7 +76,7 @@ int kv_put(kv_t *db, const char *key, const char *value) {
       entry->value = newval;
       entry->key = newkey;
       db->count++;
-      return 0;
+      return real_idx;
     }
   }
 
