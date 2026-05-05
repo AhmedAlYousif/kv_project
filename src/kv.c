@@ -59,6 +59,7 @@ int kv_put(kv_t *db, char *key, char *value) {
       char *newval = strdup(value);
       if (!newval)
         return -1;
+      free(entry->value);
       entry->value = newval;
       return 0;
     }
@@ -131,6 +132,16 @@ int kv_delete(kv_t *db, char *key) {
 }
 void kv_free(kv_t *db) {
   if (db) {
+    for (int i = 0; i < db->capacity; i++) {
+      kv_entry_t *entry = &db->entries[i];
+      if (entry->key && entry->key != TOMBSTONE) {
+        free(entry->key);
+        free(entry->value);
+        entry->key = NULL;
+        entry->value = NULL;
+        db->count--;
+      }
+    }
     free(db->entries);
     free(db);
   }
