@@ -1,28 +1,18 @@
 #include <assert.h>
 #include <kv.h>
 #include <stdio.h>
-#include <string.h>
 
 int main() {
   kv_t *db = kv_init(16);
-  printf("%p\n", db);
-  printf("%ld\n", db->capacity);
-  kv_put(db, "test", "value");
-  printf("%s\n", kv_get(db, "test"));
-  kv_put(db, "test", "overridden");
 
-  for (int i = 0; i < db->capacity; i++) {
-    if (db->entries[i].key) {
-      printf("[%d] %s: %s\n", i, db->entries[i].key, db->entries[i].value);
-    }
-  }
+  kv_put(db, "name", "alice");
+  kv_put(db, "city", "berlin");
 
-  printf("%s\n", kv_get(db, "test"));
-
-  assert(db != NULL);
-  assert(db->capacity == 16);
+  assert(kv_delete(db, "name") == 0);
+  assert(kv_get(db, "name") == NULL);
   assert(db->count == 1);
-  assert(!strcmp("overridden", kv_get(db, "test")));
-  assert(kv_get(db, "not test") == NULL);
+
+  assert(kv_delete(db, "missing") == -1);
+
   kv_free(db);
 }
