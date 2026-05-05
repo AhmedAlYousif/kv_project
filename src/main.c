@@ -8,6 +8,7 @@ int main() {
   printf("%p\n", db);
   printf("%ld\n", db->capacity);
   kv_put(db, "test", "value");
+  printf("%s\n", kv_get(db, "test"));
   kv_put(db, "test", "overridden");
 
   for (int i = 0; i < db->capacity; i++) {
@@ -16,8 +17,12 @@ int main() {
     }
   }
 
+  printf("%s\n", kv_get(db, "test"));
+
   assert(db != NULL);
   assert(db->capacity == 16);
   assert(db->count == 1);
+  assert(!strcmp("overridden", kv_get(db, "test")));
+  assert(kv_get(db, "not test") == NULL);
   kv_free(db);
 }

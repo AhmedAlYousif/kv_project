@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define TOMBSTONE 0x1
-
 kv_t *kv_init(size_t capacity) {
   if (capacity == 0) {
     return NULL;
@@ -57,15 +55,14 @@ int kv_put(kv_t *db, char *key, char *value) {
 
     kv_entry_t *entry = &db->entries[real_idx];
 
-    if (entry->key && entry->key != (void *)TOMBSTONE &&
-        !strcmp(entry->key, key)) {
+    if (entry->key && entry->key != TOMBSTONE && !strcmp(entry->key, key)) {
       char *newval = strdup(value);
       if (!newval)
         return -1;
       entry->value = newval;
       return 0;
     }
-    if (!entry->key || entry->key == (void *)TOMBSTONE) {
+    if (!entry->key || entry->key == TOMBSTONE) {
       char *newval = strdup(value);
       char *newkey = strdup(key);
       if (!newval || !newkey) {
@@ -82,6 +79,28 @@ int kv_put(kv_t *db, char *key, char *value) {
 
   // the db is occupied;
   return -2;
+}
+
+char *kv_get(kv_t *db, char *key) {
+  if (!db || !key)
+    return NULL;
+
+  size_t idx = hash(key, db->capacity);
+
+  for (int i = 0; i < db->capacity - 1; i++) {
+    size_t real_idx = (idx + i) % db->capacity;
+    kv_entry_t *entry = &db->entries[real_idx];
+
+    if (entry->key == NULL) {
+      return NULL;
+    }
+
+    if (entry->key && entry->key != TOMBSTONE && !strcmp(entry->key, key)) {
+      return entry->value;
+    }
+  }
+
+  return NULL;
 }
 
 void kv_free(kv_t *db) {
